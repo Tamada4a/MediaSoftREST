@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet id="insert-into-questions" author="Tamada">
+        <insert tableName="questions">
+            <column name="question" value="Главный режиссёр фут-фетешист Голливуда?"/>
+            <column name="difficulty" value="800"/>
+            <column name="answer" value="Квентин Тарантино"/>
+            <column name="category_id" value="1"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="question" value="Из какого мультфильма Кот Матроскин?"/>
+            <column name="difficulty" value="200"/>
+            <column name="answer" value="Простоквашино"/>
+            <column name="category_id" value="2"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="question" value="Назовите фамилию автора сказки о рыбаке и рыбке"/>
+            <column name="difficulty" value="300"/>
+            <column name="answer" value="Пушкин"/>
+            <column name="category_id" value="3"/>
+        </insert>
+        <insert tableName="questions">
+            <column name="question" value="Из какой космической серии игр Капитан Шепард?"/>
+            <column name="difficulty" value="200"/>
+            <column name="answer" value="Mass Effect"/>
+            <column name="category_id" value="4"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
