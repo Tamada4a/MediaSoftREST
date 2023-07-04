@@ -1,7 +1,6 @@
 package com.example.mediasoftrest.helpers;
 
 import com.example.mediasoftrest.dtos.QuestionDTO;
-import com.example.mediasoftrest.dtos.ResponseDTO;
 import com.example.mediasoftrest.mysql.interfaces.CategoryRepository;
 import com.example.mediasoftrest.mysql.interfaces.QuestionsRepository;
 import com.example.mediasoftrest.mysql.tables.Questions;
@@ -29,44 +28,12 @@ public class QuestionGetter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private ResponseDTO response;
-
 
     public ResponseEntity<?> getQuestionFromAPI() throws IOException {
         String urlAPI = "https://the-trivia-api.com/v2/questions?limit=1";
         HashMap<String, Object> apiQuestion = (HashMap<String, Object>) restTemplate.getForObject(urlAPI, ArrayList.class).get(0);
 
-        response = new ResponseDTO(HttpStatus.OK, "", APIQuestionToDTO(apiQuestion));
-        return ResponseEntity.ok(response);
-    }
-
-
-    public ResponseEntity<?> getQuestionFromDB(){
-        List<Questions> questions = questionsRepository.findAll();
-
-        if (questions.isEmpty()) {
-            response = new ResponseDTO(HttpStatus.NO_CONTENT, "Список вопросов пуст", null);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
-        }
-
-        int randomIdx = new Random().nextInt(questions.size());
-
-        QuestionDTO randomQuestion = DBQuestionToDTO(questions.get(randomIdx));
-
-        response = new ResponseDTO(HttpStatus.OK, "", randomQuestion);
-        return ResponseEntity.ok(response);
-    }
-
-
-    private QuestionDTO DBQuestionToDTO(Questions question){
-        int catId = question.getCategory();
-        String catName = categoryRepository.findById(catId).get(0).getName();
-
-        HashMap<String, Object> new_category = new HashMap<>();
-        new_category.put("id", catId);
-        new_category.put("name", catName);
-
-        return new QuestionDTO(question.getId(), question.getQuestion(), new_category, question.getDifficulty());
+        return Requests.ok(APIQuestionToDTO(apiQuestion));
     }
 
 
@@ -91,5 +58,32 @@ public class QuestionGetter {
         new_category.put("name", catName);
 
         return new QuestionDTO(id, questionText, new_category, difficulty);
+    }
+
+
+    public ResponseEntity<?> getQuestionFromDB(){
+        List<Questions> questions = questionsRepository.findAll();
+
+        if (questions.isEmpty()) {
+            return Requests.badRequest(HttpStatus.NO_CONTENT, "Список вопросов пуст", null);
+        }
+
+        int randomIdx = new Random().nextInt(questions.size());
+
+        QuestionDTO randomQuestion = DBQuestionToDTO(questions.get(randomIdx));
+
+        return Requests.ok(randomQuestion);
+    }
+
+
+    private QuestionDTO DBQuestionToDTO(Questions question){
+        int catId = question.getCategory();
+        String catName = categoryRepository.findById(catId).get(0).getName();
+
+        HashMap<String, Object> new_category = new HashMap<>();
+        new_category.put("id", catId);
+        new_category.put("name", catName);
+
+        return new QuestionDTO(question.getId(), question.getQuestion(), new_category, question.getDifficulty());
     }
 }
