@@ -8,7 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class OutputAnswerDTO {
 
-    private int question_id;
+    private Object question_id;
 
     private boolean is_correct;
 

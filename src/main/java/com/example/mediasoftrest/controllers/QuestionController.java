@@ -1,9 +1,7 @@
 package com.example.mediasoftrest.controllers;
 
-import com.example.mediasoftrest.dtos.InputAnswerDTO;
-import com.example.mediasoftrest.dtos.OutputAnswerDTO;
-import com.example.mediasoftrest.dtos.QuestionDTO;
-import com.example.mediasoftrest.dtos.ResponseDTO;
+import com.example.mediasoftrest.dtos.*;
+import com.example.mediasoftrest.helpers.Translator;
 import com.example.mediasoftrest.mysql.interfaces.CategoryRepository;
 import com.example.mediasoftrest.mysql.interfaces.QuestionsRepository;
 import com.example.mediasoftrest.mysql.tables.Category;
@@ -14,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +22,7 @@ import java.util.Random;
 
 
 @RestController
+@RequestMapping("/question")
 public class QuestionController {
 
     @Autowired
@@ -30,42 +31,33 @@ public class QuestionController {
     @Autowired
     QuestionsRepository questionsRepository;
 
+    private ResponseDTO response;
 
-    @RequestMapping(value = "/question/random", method = RequestMethod.GET)
-    public ResponseEntity<?> getRandomQuestion(){
-        List<Questions> questions = questionsRepository.findAll();
-        ResponseDTO response;
+    private final Random random = new Random();
 
-        if (questions.isEmpty()) {
-            response = new ResponseDTO(HttpStatus.NO_CONTENT, "Questions list is empty", null);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+    private final RestTemplate restTemplate = new RestTemplate();
+
+
+    @RequestMapping(value = "/random", method = RequestMethod.GET)
+    public ResponseEntity<?> getRandomQuestion() throws IOException {
+        int chooser = random.nextInt(2);
+
+        if (chooser == 0)
+            return getQuestionFromDB();
+        else {
+            return getQuestionFromAPI();
         }
-
-        Random random = new Random();
-        int randomIdx = random.nextInt(questions.size());
-
-        QuestionDTO randomQuestion = questionToDTO(questions.get(randomIdx));
-
-        if (randomQuestion == null) {
-            response = new ResponseDTO(HttpStatus.NOT_FOUND, "Category didn't exist", null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
-
-        response = new ResponseDTO(HttpStatus.OK, "", randomQuestion);
-        return ResponseEntity.ok(response);
     }
 
 
-    @RequestMapping(value = "/question/check", method = RequestMethod.POST)
+    @RequestMapping(value = "/check", method = RequestMethod.POST)
     public ResponseEntity<?> checkQuestionAnswer(InputAnswerDTO checkAnswerDTO){
         int id = checkAnswerDTO.getQuestion_id();
 
         ArrayList<Questions> questions = questionsRepository.findById(id);
 
-        ResponseDTO response;
-
         if (questions.isEmpty()) {
-            response = new ResponseDTO(HttpStatus.NOT_FOUND, "Question didn't exist", null);
+            response = new ResponseDTO(HttpStatus.NOT_FOUND, "Вопрос не существует", null);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
@@ -81,19 +73,64 @@ public class QuestionController {
     }
 
 
-    private QuestionDTO questionToDTO(Questions question){
-        int catId = question.getId();
-        ArrayList<Category> categories = categoryRepository.findById(catId);
+    private ResponseEntity<?> getQuestionFromAPI() throws IOException {
+        String urlAPI = "https://the-trivia-api.com/v2/questions?limit=1";
+        HashMap<String, Object> apiQuestion = (HashMap<String, Object>) restTemplate.getForObject(urlAPI, ArrayList.class).get(0);
 
-        if (categories.isEmpty())
-            return null;
+        response = new ResponseDTO(HttpStatus.OK, "", APIQuestionToDTO(apiQuestion));
+        return ResponseEntity.ok(response);
+    }
 
-        String catName = categories.get(0).getName();
+
+    private ResponseEntity<?> getQuestionFromDB(){
+        List<Questions> questions = questionsRepository.findAll();
+
+        if (questions.isEmpty()) {
+            response = new ResponseDTO(HttpStatus.NO_CONTENT, "Список вопросов пуст", null);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(response);
+        }
+
+        int randomIdx = random.nextInt(questions.size());
+
+        QuestionDTO randomQuestion = DBQuestionToDTO(questions.get(randomIdx));
+
+        response = new ResponseDTO(HttpStatus.OK, "", randomQuestion);
+        return ResponseEntity.ok(response);
+    }
+
+
+    private QuestionDTO DBQuestionToDTO(Questions question){
+        int catId = question.getCategory();
+        String catName = categoryRepository.findById(catId).get(0).getName();
 
         HashMap<String, Object> new_category = new HashMap<>();
         new_category.put("id", catId);
         new_category.put("name", catName);
 
-        return new QuestionDTO(catId, question.getQuestion(), new_category, question.getDifficulty());
+        return new QuestionDTO(question.getId(), question.getQuestion(), new_category, question.getDifficulty());
+    }
+
+
+    private QuestionDTO APIQuestionToDTO(HashMap<String, Object> apiQuestion) throws IOException {
+        Object id = apiQuestion.get("id");
+
+        HashMap<String, String> question = (HashMap<String, String>) apiQuestion.get("question");
+        String questionText = Translator.translate("en", "ru", question.get("text"));
+
+        String difficultyStr = (String) apiQuestion.get("difficulty");
+        int difficulty = switch (difficultyStr) {
+            case "medium" -> 450;
+            case "hard" -> 800;
+            default -> 200;
+        };
+
+        String categoryEn = (String) apiQuestion.get("category");
+        String catName = Translator.translate("en", "ru", categoryEn);
+
+        HashMap<String, Object> new_category = new HashMap<>();
+        new_category.put("id", 0);
+        new_category.put("name", catName);
+
+        return new QuestionDTO(id, questionText, new_category, difficulty);
     }
 }

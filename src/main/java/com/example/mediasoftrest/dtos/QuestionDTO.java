@@ -10,7 +10,7 @@ import java.util.HashMap;
 @AllArgsConstructor
 public class QuestionDTO {
 
-    private int id;
+    private Object id;
 
     private String question;
 
