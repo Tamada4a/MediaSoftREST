@@ -1,6 +1,8 @@
-package com.example.mediasoftrest.helpers;
+package com.example.mediasoftrest.helpers.service;
 
 import com.example.mediasoftrest.dtos.QuestionDTO;
+import com.example.mediasoftrest.helpers.Requests;
+import com.example.mediasoftrest.helpers.Translator;
 import com.example.mediasoftrest.mysql.interfaces.CategoryRepository;
 import com.example.mediasoftrest.mysql.interfaces.QuestionsRepository;
 import com.example.mediasoftrest.mysql.tables.Questions;
@@ -29,7 +31,19 @@ public class QuestionGetter {
     private final RestTemplate restTemplate = new RestTemplate();
 
 
-    public ResponseEntity<?> getQuestionFromAPI() throws IOException {
+    public ResponseEntity<?> getQuestion() throws IOException {
+        int chooser = new Random().nextInt(2);
+
+        if (chooser == 0) {
+            return getQuestionFromDB();
+        }
+        else {
+            return getQuestionFromAPI();
+        }
+    }
+
+
+    private ResponseEntity<?> getQuestionFromAPI() throws IOException {
         String urlAPI = "https://the-trivia-api.com/v2/questions?limit=1";
         HashMap<String, Object> apiQuestion = (HashMap<String, Object>) restTemplate.getForObject(urlAPI, ArrayList.class).get(0);
 
@@ -61,11 +75,11 @@ public class QuestionGetter {
     }
 
 
-    public ResponseEntity<?> getQuestionFromDB(){
+    private ResponseEntity<?> getQuestionFromDB(){
         List<Questions> questions = questionsRepository.findAll();
 
         if (questions.isEmpty()) {
-            return Requests.badRequest(HttpStatus.NO_CONTENT, "Список вопросов пуст", null);
+            return Requests.badRequest(HttpStatus.NOT_FOUND, "Список вопросов пуст", null);
         }
 
         int randomIdx = new Random().nextInt(questions.size());

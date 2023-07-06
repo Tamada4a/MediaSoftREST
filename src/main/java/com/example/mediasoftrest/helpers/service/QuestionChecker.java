@@ -1,7 +1,9 @@
-package com.example.mediasoftrest.helpers;
+package com.example.mediasoftrest.helpers.service;
 
 import com.example.mediasoftrest.dtos.InputAnswerDTO;
 import com.example.mediasoftrest.dtos.OutputAnswerDTO;
+import com.example.mediasoftrest.helpers.Requests;
+import com.example.mediasoftrest.helpers.Translator;
 import com.example.mediasoftrest.mysql.interfaces.QuestionsRepository;
 import com.example.mediasoftrest.mysql.tables.Questions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +52,7 @@ public class QuestionChecker {
         ArrayList<Questions> questions = questionsRepository.findById(id);
 
         if (questions.isEmpty()){
-            return Requests.badRequest(HttpStatus.NO_CONTENT, "Вопроса с id " + id + " не существует", null);
+            return Requests.badRequest(HttpStatus.NOT_FOUND, "Вопроса с id " + id + " не существует", null);
         }
 
         correctAnswer = questions.get(0).getAnswer();
@@ -77,7 +79,7 @@ public class QuestionChecker {
 
                 cache.put(id, correctAnswer);
             } catch (HttpClientErrorException.NotFound e) {
-                return Requests.badRequest(HttpStatus.NO_CONTENT, "Вопроса с id " + id + " не существует", null);
+                return Requests.badRequest(HttpStatus.NOT_FOUND, "Вопроса с id " + id + " не существует", null);
             } catch (IOException e) {
                 return Requests.badRequest(HttpStatus.REQUEST_TIMEOUT, "Не удалось перевести текст", null);
             }
@@ -87,6 +89,7 @@ public class QuestionChecker {
 
         boolean is_correct = correctAnswer.equals(answer);
         OutputAnswerDTO outputAnswerDTO = new OutputAnswerDTO(id, is_correct, correctAnswer);
+
         return Requests.ok(outputAnswerDTO);
     }
 
