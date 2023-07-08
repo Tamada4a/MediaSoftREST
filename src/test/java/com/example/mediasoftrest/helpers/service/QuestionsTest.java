@@ -1,6 +1,5 @@
 package com.example.mediasoftrest.helpers.service;
 
-import com.example.mediasoftrest.dtos.CreateGameDTO;
 import com.example.mediasoftrest.dtos.InputAnswerDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
