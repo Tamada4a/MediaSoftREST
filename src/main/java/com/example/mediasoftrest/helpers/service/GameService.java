@@ -161,7 +161,7 @@ public class GameService {
         }
 
         if (questions.size() - 1 < qIdx){
-            return Requests.badRequest(HttpStatus.BAD_REQUEST, "Вопроса с таким порядковым номером нет", null);
+            return Requests.badRequest(HttpStatus.NOT_FOUND, "Вопроса с таким порядковым номером нет", null);
         }
 
         return Requests.ok(null);

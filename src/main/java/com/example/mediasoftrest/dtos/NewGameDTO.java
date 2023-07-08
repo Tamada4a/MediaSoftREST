@@ -9,5 +9,5 @@ import lombok.Data;
 public class NewGameDTO {
     private String id;
 
-    private int qCount;
+    private Integer qCount;
 }

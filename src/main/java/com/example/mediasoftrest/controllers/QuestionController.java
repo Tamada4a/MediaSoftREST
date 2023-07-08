@@ -37,7 +37,7 @@ public class QuestionController {
 
 
     @RequestMapping(value = "/check", method = RequestMethod.POST)
-    public ResponseEntity<?> checkQuestionAnswer(InputAnswerDTO checkAnswerDTO){
+    public ResponseEntity<?> checkQuestionAnswer(@RequestBody InputAnswerDTO checkAnswerDTO){
         if (checkAnswerDTO.getQuestion_id() == null) {
             return Requests.badRequest(HttpStatus.NOT_FOUND, "Не указан id вопроса", null);
         }

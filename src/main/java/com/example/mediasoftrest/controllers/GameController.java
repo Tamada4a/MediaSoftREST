@@ -21,7 +21,7 @@ public class GameController {
 
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    public ResponseEntity<?> createNewGame(CreateGameDTO createGameDTO) throws IOException {
+    public ResponseEntity<?> createNewGame(@RequestBody CreateGameDTO createGameDTO) throws IOException {
         if (createGameDTO.getQCount() == null) {
             return Requests.badRequest(HttpStatus.BAD_REQUEST, "Не указано количество игр", null);
         }
